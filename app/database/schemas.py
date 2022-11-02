@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from enum import Enum
 from fastapi import HTTPException, status
+from typing import Union
 
 
 class EUserLevel(int, Enum):
@@ -30,3 +31,29 @@ class UserReturn(UserBase):
 
     class Config:
         orm_mode = True
+
+
+class TsnPieceBase(BaseModel):
+    code: str
+    text: str
+    price: int
+    spgz_piece_id: int
+
+
+class TsnPieceCreate(TsnPieceBase):
+    pass
+
+
+class TsnPieceReturn(TsnPieceBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class TsnPieceEdit(BaseModel):
+    id: int
+    code: Union[str, None] = None
+    text: Union[str, None] = None
+    price: Union[str, None] = None
+    spgz_piece_id: Union[int, None] = None

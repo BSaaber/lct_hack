@@ -4,7 +4,6 @@ from openpyxl import load_workbook
 def parse_tsn(filename: str):
     workbook = load_workbook(filename)
     worksheet = workbook.active
-    i = 0
     row_index = 28
     result = []
     while row_index < 83:

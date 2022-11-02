@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.security import check_for_admin_permission
 from sqlalchemy.orm import Session
-from app.database.init_engine import get_db
+from app.database.db_init import get_db
 import app.database.api as db_api
 import app.database.schemas as db_schemas
 from typing import List

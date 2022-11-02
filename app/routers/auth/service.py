@@ -9,7 +9,7 @@ from .schemas import SignUpIn
 import app.database.schemas as db_schemas
 import re
 from sqlalchemy.orm import Session
-from app.database.init_engine import get_db
+from app.database.db_init import get_db
 from jose import jwt
 
 router = APIRouter(
@@ -75,6 +75,8 @@ async def sign_up(form: SignUpIn, db: Session = Depends(get_db)):
     hashed_password = get_password_hash(form.password)
     user_level = db_schemas.check_user_level(form.level)
     user = db_schemas.UserCreate(email=form.email, hashed_password=hashed_password, level=user_level)
+    if await db_api.users.get_user_by_email(db, form.email) is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="there is already a user with such email")
     result = await db_api.users.create_user(db, user)
     if result is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
