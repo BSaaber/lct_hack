@@ -57,3 +57,17 @@ class TsnPieceEdit(BaseModel):
     text: Union[str, None] = None
     price: Union[str, None] = None
     spgz_piece_id: Union[int, None] = None
+
+
+class SpgzPieceCreate(BaseModel):
+    name: Union[str, None] = None
+    okpd: Union[str, None] = None
+    okpd2: str
+    uom: str
+    description: Union[str, None] = None
+    data_id: int
+    kpgz_piece_id: int
+
+
+class KpgzPieceCreate(BaseModel):
+    name: str

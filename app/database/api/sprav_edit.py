@@ -43,6 +43,27 @@ async def add_tsn_piece(db: Session, tsn_piece: schemas.TsnPieceCreate):  # дв
     db.refresh(new_tsn_piece)
     return new_tsn_piece
 
+async def add_kpgz_piece(db: Session, kpgz_piece: schemas.KpgzPieceCreate):
+    new_kpgz_piece = db_models.KpgzPiece(**kpgz_piece.dict())
+    db.add(new_kpgz_piece)
+    db.commit()
+    db.refresh(new_kpgz_piece)
+    return new_kpgz_piece
 
 async def get_spgz_piece_by_id(db: Session, id: int):
-    pass
+    return db.query(db_models.SpgzPiece).filter(db_models.SpgzPiece.id == id).first()
+
+async def get_kpgz_piece_by_id(db: Session, id: int):
+    return db.query(db_models.KpgzPiece).filter(db_models.KpgzPiece.id == id).first()
+
+
+async def add_spgz_piece(db: Session, spgz_piece: schemas.SpgzPieceCreate):
+    new_spgz_piece = db_models.SpgzPiece(**spgz_piece.dict())
+    if await get_kpgz_piece_by_id(db, new_spgz_piece.kpgz_piece_id) is None:
+        return None
+    db.add(new_spgz_piece)
+    db.commit()
+    db.refresh(new_spgz_piece)
+    return new_spgz_piece
+
+

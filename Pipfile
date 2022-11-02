@@ -14,6 +14,7 @@ passlib = "*"
 fastapi = {extras = ["all"], version = "*"}
 fastapi-sqlalchemy = "*"
 python-dotenv = "*"
+openpyxl = "*"
 
 [dev-packages]
 
