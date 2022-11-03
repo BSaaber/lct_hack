@@ -3,7 +3,10 @@ from sqlalchemy import create_engine
 from app.database import db_models # noqa - for db initialization
 from app.database import schemas as db_schemas
 import app.database.api as db_api
+import os
+from dotenv import load_dotenv
 import psycopg2
+from sqlalchemy.orm import sessionmaker
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -18,7 +21,7 @@ def get_db():
     finally:
         db.close()
 
-def parse_spgz_kpgz(filename: str):
+async def parse_spgz_kpgz(filename: str):
     workbook = load_workbook(filename)
     worksheet = workbook.active
     errors = 0
@@ -31,17 +34,17 @@ def parse_spgz_kpgz(filename: str):
         okpd = row[7]
         okpd2 = row[8]
         kpgz_piece = db_schemas.KpgzPieceCreate(name=kpgz_name)
-        kpgz_result = db_api.sprav_edit.add_kpgz_piece(get_db(), kpgz_piece)
+        kpgz_result = await db_api.sprav_edit.add_kpgz_piece(get_db(), kpgz_piece)
         if kpgz_result is None:
             errors += 1
             print(row)
 
         spgz_piece = db_schemas.SpgzPieceCreate(name=spgz_name, okpd=okpd, okpd2=okpd2, uom=uom,description=spgz_description, data_id=data_id, kpgz_piece_id=kpgz_result.id)
 
-        db_api.sprav_edit.add_spgz_piece(get_db(), spgz_piece)
+        await db_api.sprav_edit.add_spgz_piece(get_db(), spgz_piece)
     return errors
 
 
-errors_amount = parse_tsn("spgz_kpgz.xlsx")
+errors_amount = await parse_spgz_kpgz("app/scripts/spgz_kpgz.xlsx")
 print("total errors: ")
 print(errors_amount)

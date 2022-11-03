@@ -18,6 +18,8 @@ services:
       - "8080:8080"
     depends_on:
       - db
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432
 
   pgadmin:
     container_name: pgadmin
