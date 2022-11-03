@@ -34,14 +34,13 @@ async def edit_tsn_piece(db: Session, tsn_piece: schemas.TsnPieceEdit):  # дв�
     return tsn_piece
 
 
-async def add_tsn_piece(db: Session, tsn_piece: schemas.TsnPieceCreate):  # двойная запись?
+async def add_tsn_piece_without_spgz(db: Session, tsn_piece: schemas.TsnPieceCreateWithoutSpgz):  # двойная запись?
     new_tsn_piece = db_models.TsnPiece(**tsn_piece.dict())
-    if await get_spgz_piece_by_id(db, new_tsn_piece.spgz_piece_id) is None:
-        return None
     db.add(new_tsn_piece)
     db.commit()
     db.refresh(new_tsn_piece)
     return new_tsn_piece
+
 
 async def add_kpgz_piece(db: Session, kpgz_piece: schemas.KpgzPieceCreate):
     new_kpgz_piece = db_models.KpgzPiece(**kpgz_piece.dict())
@@ -50,11 +49,21 @@ async def add_kpgz_piece(db: Session, kpgz_piece: schemas.KpgzPieceCreate):
     db.refresh(new_kpgz_piece)
     return new_kpgz_piece
 
+
 async def get_spgz_piece_by_id(db: Session, id: int):
     return db.query(db_models.SpgzPiece).filter(db_models.SpgzPiece.id == id).first()
 
+
+async def get_spgz_piece_by_data_id(db: Session, data_id: int):
+    return db.query(db_models.SpgzPiece).filter(db_models.SpgzPiece.data_id == data_id).first()
+
+
 async def get_kpgz_piece_by_id(db: Session, id: int):
     return db.query(db_models.KpgzPiece).filter(db_models.KpgzPiece.id == id).first()
+
+
+async def get_kpgz_piece_by_name(db: Session, name: str):
+    return db.query(db_models.KpgzPiece).filter(db_models.KpgzPiece.name == name).first()
 
 
 async def add_spgz_piece(db: Session, spgz_piece: schemas.SpgzPieceCreate):
@@ -65,5 +74,3 @@ async def add_spgz_piece(db: Session, spgz_piece: schemas.SpgzPieceCreate):
     db.commit()
     db.refresh(new_spgz_piece)
     return new_spgz_piece
-
-

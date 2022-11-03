@@ -23,10 +23,8 @@ class TsnPiece(Base):
     code = Column(String, unique=True)  # шифр
     text = Column(String)  # наименование работ и затрат
     price = Column(Integer)  # всего затрат в текущем уровне, руб
-    # spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
-    # spgz_piece = relationship("SpgzPiece")
+    uom = Column(String)  # unit of measurement -  ед. изм.
     hypothesises = relationship("Hypothesis")
-    # TODO Добавить метч с SpgzPiece. Возможно храним список даже, а не единственное число. т е многие ко многим
 
 
 class Hypothesis(Base):

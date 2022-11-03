@@ -38,10 +38,14 @@ class TsnPieceBase(BaseModel):
     text: str
     price: int
     spgz_piece_id: int
+    uom: str
 
 
-class TsnPieceCreate(TsnPieceBase):
-    pass
+class TsnPieceCreateWithoutSpgz(BaseModel):
+    code: str
+    text: str
+    price: int
+    uom: str
 
 
 class TsnPieceReturn(TsnPieceBase):
