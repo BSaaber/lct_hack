@@ -5,10 +5,9 @@ from app.database import schemas as db_schemas
 import app.database.api as db_api
 import os
 from dotenv import load_dotenv
-import psycopg2  # noqa
+import psycopg2  # noqa - driver for db
 from sqlalchemy.orm import sessionmaker
 import asyncio
-from collections import namedtuple
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -94,10 +93,10 @@ async def parse_tsn(filename: str):
                 continue
             else:
                 dealt += 1
-            #code = None
-            #text = None
-            #uom = None
-            #price = None
+            # code = None
+            # text = None
+            # uom = None
+            # price = None
             # print("----------------")
             # form tsn_piece
             tsn_piece = db_schemas.TsnPieceCreateWithoutSpgz(code=code, text=text, uom=uom, price=price)
@@ -112,12 +111,6 @@ async def parse_tsn(filename: str):
         return errors, dealt
 
 
-# FileInfo = namedtuple("FileInfo", ["code_index", "text_index", "uom_index", "price_index"])
-
-# filenames = {
-#    "3.Строительные.Сборник 1-9.xlsx": FileInfo(1, 4, 9, 24),
-#    25
-# }
 filenames = os.listdir("app/scripts/data/tsn")
 total_errors = 0
 loop = asyncio.get_event_loop()

@@ -63,6 +63,36 @@ class TsnPieceEdit(BaseModel):
     spgz_piece_id: Union[int, None] = None
 
 
+class SnPieceBase(BaseModel):
+    code: str
+    text: str
+    price: int
+    spgz_piece_id: int
+    uom: str
+
+
+class SnPieceCreateWithoutSpgz(BaseModel):
+    code: str
+    text: str
+    price: int
+    uom: str
+
+
+class SnPieceReturn(TsnPieceBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class SnPieceEdit(BaseModel):
+    id: int
+    code: Union[str, None] = None
+    text: Union[str, None] = None
+    price: Union[str, None] = None
+    spgz_piece_id: Union[int, None] = None
+
+
 class SpgzPieceCreate(BaseModel):
     name: Union[str, None] = None
     okpd: Union[str, None] = None

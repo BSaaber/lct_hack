@@ -17,21 +17,38 @@ class User(Base):
 class TsnPiece(Base):
     __tablename__ = "tsn"
 
-    # название сборника?
-    # доп информация джсоном?
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String, unique=True)  # шифр
     text = Column(String)  # наименование работ и затрат
     price = Column(Integer)  # всего затрат в текущем уровне, руб
     uom = Column(String)  # unit of measurement -  ед. изм.
-    hypothesises = relationship("Hypothesis")
+    hypothesises = relationship("TsnHypothesis")
 
 
-class Hypothesis(Base):
-    __tablename__ = "hypothesis"
+class SnPiece(Base):
+    __tablename__ = "sn"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, unique=True)  # шифр
+    text = Column(String)  # наименование работ и затрат
+    price = Column(Integer)  # всего затрат в текущем уровне, руб
+    uom = Column(String)  # unit of measurement -  ед. изм.
+    hypothesises = relationship("SnHypothesis")
+
+
+class TsnHypothesis(Base):
+    __tablename__ = "tsn_hypothesis"
     id = Column(Integer, primary_key=True, index=True)
     priority = Column(Integer)
     tsn_piece_id = Column(Integer, ForeignKey("tsn.id"))
+    spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
+
+
+class SnHypothesis(Base):
+    __tablename__ = "sn_hypothesis"
+    id = Column(Integer, primary_key=True, index=True)
+    priority = Column(Integer)
+    tsn_piece_id = Column(Integer, ForeignKey("sn.id"))
     spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
 
 

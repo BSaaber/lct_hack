@@ -11,12 +11,27 @@ async def get_tsn_piece_by_code(db: Session, code: str):
     return db.query(db_models.TsnPiece).filter(db_models.TsnPiece.code == code).first()
 
 
+async def get_sn_piece_by_code(db: Session, code: str):
+    return db.query(db_models.SnPiece).filter(db_models.SnPiece.code == code).first()
+
+
 async def get_tsn(db: Session, offset: int = 0, limit: int = 100):
     return db.query(db_models.TsnPiece).offset(offset).limit(limit).all()
 
 
+async def get_sn(db: Session, offset: int = 0, limit: int = 100):
+    return db.query(db_models.SnPiece).offset(offset).limit(limit).all()
+
+
 async def delete_tsn_piece(db: Session, id: int):
     delete_result = db.query(db_models.TsnPiece).filter(db_models.TsnPiece.id == id).delete()
+    if delete_result != 1:
+        return None
+    return delete_result
+
+
+async def delete_sn_piece(db: Session, id: int):
+    delete_result = db.query(db_models.SnPiece).filter(db_models.SnPiece.id == id).delete()
     if delete_result != 1:
         return None
     return delete_result
@@ -34,12 +49,32 @@ async def edit_tsn_piece(db: Session, tsn_piece: schemas.TsnPieceEdit):  # дв�
     return tsn_piece
 
 
+async def edit_sn_piece(db: Session, sn_piece: schemas.SnPieceEdit):  # двойная запись?
+    update = {k: v for k, v in sn_piece.dict().items() if v is not None}
+    if "spgz_piece_id" in update:
+        if await get_spgz_piece_by_id(db, update["spgz_piece_id"]) is None:
+            return None
+    del update["id"]
+    db.query(db_models.SnPiece).filter(db_models.SnPiece.id == sn_piece.id).update(update)
+    db.commit()
+    db.refresh(sn_piece)
+    return sn_piece
+
+
 async def add_tsn_piece_without_spgz(db: Session, tsn_piece: schemas.TsnPieceCreateWithoutSpgz):  # двойная запись?
     new_tsn_piece = db_models.TsnPiece(**tsn_piece.dict())
     db.add(new_tsn_piece)
     db.commit()
     db.refresh(new_tsn_piece)
     return new_tsn_piece
+
+
+async def add_sn_piece_without_spgz(db: Session, sn_piece: schemas.SnPieceCreateWithoutSpgz):  # двойная запись?
+    new_sn_piece = db_models.SnPiece(**sn_piece.dict())
+    db.add(new_sn_piece)
+    db.commit()
+    db.refresh(new_sn_piece)
+    return new_sn_piece
 
 
 async def add_kpgz_piece(db: Session, kpgz_piece: schemas.KpgzPieceCreate):
