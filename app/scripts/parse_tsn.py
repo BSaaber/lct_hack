@@ -2,6 +2,7 @@ from openpyxl import load_workbook
 from sqlalchemy import create_engine
 from app.database import db_models  # noqa - for db initialization
 from app.database import schemas as db_schemas
+from app.scripts.morphem_handler import TextHandler
 import app.database.api as db_api
 import os
 from dotenv import load_dotenv
@@ -19,6 +20,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 async def parse_tsn(filename: str):
     print("parse_tsn started to work")
     with SessionLocal() as db:
+        text_handler = TextHandler()
         workbook = load_workbook(filename)
         worksheet = workbook.active
         errors = 0
@@ -99,7 +101,10 @@ async def parse_tsn(filename: str):
             # price = None
             # print("----------------")
             # form tsn_piece
-            tsn_piece = db_schemas.TsnPieceCreateWithoutSpgz(code=code, text=text, uom=uom, price=price)
+            tsn_mapping_info = ','.join(text_handler.process_text(text))
+            print(tsn_mapping_info)
+            tsn_piece = db_schemas.TsnPieceCreateWithoutSpgz(code=code, text=text, tsn_mapping_info=tsn_mapping_info,
+                                                             uom=uom, price=price)
             tsn_result = await db_api.sprav_edit.get_tsn_piece_by_code(db, code)
             if tsn_result is None:
                 # write tsn_piece to db

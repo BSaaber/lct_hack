@@ -36,6 +36,7 @@ class UserReturn(UserBase):
 class TsnPieceBase(BaseModel):
     code: str
     text: str
+    tsn_mapping_info: str
     price: int
     spgz_piece_id: int
     uom: str
@@ -44,6 +45,7 @@ class TsnPieceBase(BaseModel):
 class TsnPieceCreateWithoutSpgz(BaseModel):
     code: str
     text: str
+    tsn_mapping_info: str
     price: int
     uom: str
 
@@ -58,6 +60,7 @@ class TsnPieceReturn(TsnPieceBase):
 class TsnPieceEdit(BaseModel):
     id: int
     code: Union[str, None] = None
+    tsn_mapping_info: Union[str, None] = None
     text: Union[str, None] = None
     price: Union[str, None] = None
     spgz_piece_id: Union[int, None] = None
@@ -95,6 +98,7 @@ class SnPieceEdit(BaseModel):
 
 class SpgzPieceCreate(BaseModel):
     name: Union[str, None] = None
+    mapping_info: Union[str, None] = None
     okpd: Union[str, None] = None
     okpd2: str
     uom: str

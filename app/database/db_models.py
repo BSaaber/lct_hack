@@ -20,6 +20,7 @@ class TsnPiece(Base):
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String, unique=True)  # шифр
     text = Column(String)  # наименование работ и затрат
+    tsn_mapping_info = Column(String)
     price = Column(Integer)  # всего затрат в текущем уровне, руб
     uom = Column(String)  # unit of measurement -  ед. изм.
     hypothesises = relationship("TsnHypothesis")
@@ -58,6 +59,7 @@ class SpgzPiece(Base):
     id = Column(Integer, primary_key=True, index=True)
     data_id = Column(Integer, unique=True)  # ID из датасета, по тз просили хранить в базе
     name = Column(String)
+    mapping_info = Column(String)
     description = Column(String)
     okpd = Column(String)
     okpd2 = Column(String)
