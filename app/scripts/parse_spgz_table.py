@@ -2,6 +2,7 @@ from openpyxl import load_workbook
 from sqlalchemy import create_engine
 from app.database import db_models  # noqa - for db initialization
 from app.database import schemas as db_schemas
+from app.scripts.morphem_handler import TextHandler
 import app.database.api as db_api
 import os
 from dotenv import load_dotenv
@@ -19,6 +20,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 async def parse_spgz_kpgz(filename: str):
     print("parse_spgz_kpgz started to work")
     with SessionLocal() as db:
+        text_handler = TextHandler()
         workbook = load_workbook(filename)
         worksheet = workbook.active
         errors = 0
@@ -31,6 +33,7 @@ async def parse_spgz_kpgz(filename: str):
             data_id = row[0]
             kpgz_name = row[3]
             spgz_name = row[4]
+            spgz_mapping_info = ','.join(text_handler.process_text(spgz_name))
             spgz_description = row[5]
             uom = row[6]
             okpd = row[7]
@@ -51,7 +54,7 @@ async def parse_spgz_kpgz(filename: str):
                     continue
 
             # form spgz_piece
-            spgz_piece = db_schemas.SpgzPieceCreate(name=spgz_name, okpd=okpd, okpd2=okpd2, uom=uom,
+            spgz_piece = db_schemas.SpgzPieceCreate(name=spgz_name, mapping_info=spgz_mapping_info, okpd=okpd, okpd2=okpd2, uom=uom,
                                                     description=spgz_description, data_id=data_id,
                                                     kpgz_piece_id=kpgz_result.id)
 
