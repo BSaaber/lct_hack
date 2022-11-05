@@ -7,10 +7,15 @@ from app.database.api.users import get_user_by_email
 from sqlalchemy.orm import Session
 from app.database.db_init import get_db
 
+prod_mode = True
+
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/get_token")
 
 
 async def get_user_role(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    if not prod_mode:
+        return EUserLevel.admin
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -30,6 +35,8 @@ async def get_user_role(token: str = Depends(oauth2_scheme), db: Session = Depen
 
 
 async def check_for_user_permission(role: EUserLevel = Depends(get_user_role)):
+    if not prod_mode:
+        return
     if role < EUserLevel.user:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -38,6 +45,8 @@ async def check_for_user_permission(role: EUserLevel = Depends(get_user_role)):
 
 
 async def check_for_moderator_permission(role: EUserLevel = Depends(get_user_role)):
+    if not prod_mode:
+        return
     if role < EUserLevel.moderator:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -46,6 +55,8 @@ async def check_for_moderator_permission(role: EUserLevel = Depends(get_user_rol
 
 
 async def check_for_admin_permission(role: EUserLevel = Depends(get_user_role)):
+    if not prod_mode:
+        return
     if role < EUserLevel.moderator:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

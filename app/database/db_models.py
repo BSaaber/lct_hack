@@ -43,14 +43,18 @@ class TsnHypothesis(Base):
     priority = Column(Integer)
     tsn_piece_id = Column(Integer, ForeignKey("tsn.id"))
     spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
+    spgz_piece = relationship("SpgzPiece")
+    usage_counter = Column(Integer)
 
 
 class SnHypothesis(Base):
     __tablename__ = "sn_hypothesis"
     id = Column(Integer, primary_key=True, index=True)
     priority = Column(Integer)
-    tsn_piece_id = Column(Integer, ForeignKey("sn.id"))
+    sn_piece_id = Column(Integer, ForeignKey("sn.id"))
     spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
+    spgz_piece = relationship("SpgzPiece")
+    usage_counter = Column(Integer)
 
 
 class SpgzPiece(Base):

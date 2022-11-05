@@ -38,7 +38,6 @@ class TsnPieceBase(BaseModel):
     text: str
     tsn_mapping_info: str
     price: int
-    spgz_piece_id: int
     uom: str
 
 
@@ -70,7 +69,6 @@ class SnPieceBase(BaseModel):
     code: str
     text: str
     price: int
-    spgz_piece_id: int
     uom: str
 
 
@@ -81,7 +79,7 @@ class SnPieceCreateWithoutSpgz(BaseModel):
     uom: str
 
 
-class SnPieceReturn(TsnPieceBase):
+class SnPieceReturn(SnPieceBase):
     id: int
 
     class Config:
@@ -107,5 +105,45 @@ class SpgzPieceCreate(BaseModel):
     kpgz_piece_id: int
 
 
+class KpgzPieceReturn(BaseModel):
+    name: str
+    id: str
+
+    class Config:
+        orm_mode = True
+
+
+class SpgzPieceReturn(BaseModel):
+    name: str
+    id: int
+    kpgz_piece: KpgzPieceReturn
+
+    class Config:
+        orm_mode = True
+
+
 class KpgzPieceCreate(BaseModel):
     name: str
+
+
+class Hypothesis(BaseModel):
+    priority: int
+    usage_counter: int = 0
+
+
+class TsnHypothesisCreate(Hypothesis):
+    tsn_piece_id: int
+    spgz_piece_id: int
+
+
+class TsnHypothesisReturn(Hypothesis):
+    spgz_piece: SpgzPieceReturn
+
+
+class SnHypothesisCreate(Hypothesis):
+    sn_piece_id: int
+    spgz_piece_id: int
+
+
+class SnHypothesisReturn(Hypothesis):
+    spgz_piece: SpgzPieceReturn

@@ -16,16 +16,19 @@ engine = create_engine(os.environ["DATABASE_URL"])
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+# TODO check read only mode in load_workbook [  mean load_workbook(filename, read_only=True) ]
+
+
 async def parse_sn(filename: str):
     print("parse_sn started to work")
     with SessionLocal() as db:
-        workbook = load_workbook(filename)
+        workbook = load_workbook(filename, read_only=True)
         worksheet = workbook.active
         errors = 0
-        code = 0
-        text = 0
-        uom = 0
-        price = 0
+        code = None
+        text = None
+        uom = None
+        price = None
         skipper = 0
         insert = False
         waiter = False
@@ -46,7 +49,7 @@ async def parse_sn(filename: str):
                     uom_index = i
                 elif cell == "ВСЕГО затрат, руб.":
                     price_index = i
-        for i, row in enumerate(worksheet.iter_rows(min_row=28, values_only=True)):
+        for i, row in enumerate(worksheet.iter_rows(min_row=16, values_only=True)):
             if row[4] == "Итого по разделу":
                 print("ended at line: ", i + 28)
                 print("ALL WENT DONE")
@@ -89,6 +92,11 @@ async def parse_sn(filename: str):
             # print("uom: ", uom)
             # print("price: ", price)
             if code is None or text is None or uom is None or price is None:
+                print("line: ", i + 28)
+                print("code: ", code)
+                print("text: ", text)
+                print("uom: ", uom)
+                print("price: ", price)
                 check_for_end = True
                 continue
             else:
@@ -99,8 +107,6 @@ async def parse_sn(filename: str):
             # price = None
             # print("----------------")
             # form sn_piece
-
-
 
             sn_piece = db_schemas.SnPieceCreateWithoutSpgz(code=code, text=text, uom=uom, price=price)
             sn_result = await db_api.sprav_edit.get_sn_piece_by_code(db, code)

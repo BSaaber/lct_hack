@@ -21,7 +21,7 @@ async def parse_spgz_kpgz(filename: str):
     print("parse_spgz_kpgz started to work")
     with SessionLocal() as db:
         text_handler = TextHandler()
-        workbook = load_workbook(filename)
+        workbook = load_workbook(filename, read_only=True)
         worksheet = workbook.active
         errors = 0
         i = 0

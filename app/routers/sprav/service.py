@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from app.security import check_for_moderator_permission
 from typing import List
 import app.database.api as db_api
@@ -7,12 +7,27 @@ from sqlalchemy.orm import Session
 from app.database.db_init import get_db
 from .schemas import *
 from app.database.schemas import TsnPieceEdit  # , TsnPieceCreate
+from openpyxl import load_workbook
+from . import work_with_smeta
+from fastapi.responses import FileResponse
+from io import BytesIO
 
 router = APIRouter(
     prefix="/sprav",
     tags=["sprav"],
     dependencies=[Depends(check_for_moderator_permission)],
 )
+
+
+@router.post("/parse_smeta", response_model=Smeta)
+async def create_file(db: Session = Depends(get_db), file: bytes = File()):
+    return await work_with_smeta.parse_smeta(db, file)
+
+
+@router.post("/patch_smeta") #response_class=FileResponse)
+async def create_file(patches: PatchSmetaIn):#, db: Session = Depends(get_db), file: bytes = File()):
+    return patches
+    #return FileResponse(BytesIO(file))
 
 
 @router.get("/")  # response_model=

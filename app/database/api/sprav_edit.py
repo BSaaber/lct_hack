@@ -19,8 +19,24 @@ async def get_tsn(db: Session, offset: int = 0, limit: int = 100):
     return db.query(db_models.TsnPiece).offset(offset).limit(limit).all()
 
 
+async def count_tsn_pieces(db: Session):
+    return db.query(db_models.TsnPiece).count()
+
+
 async def get_sn(db: Session, offset: int = 0, limit: int = 100):
     return db.query(db_models.SnPiece).offset(offset).limit(limit).all()
+
+
+async def count_sn_pieces(db: Session):
+    return db.query(db_models.SnPiece).count()
+
+
+async def get_all_tsn(db: Session):
+    return db.query(db_models.TsnPiece).all()
+
+
+async def get_all_sn(db: Session):
+    return db.query(db_models.SnPiece).all()
 
 
 async def delete_tsn_piece(db: Session, id: int):
@@ -67,6 +83,30 @@ async def add_tsn_piece_without_spgz(db: Session, tsn_piece: schemas.TsnPieceCre
     db.commit()
     db.refresh(new_tsn_piece)
     return new_tsn_piece
+
+
+async def add_sn_hypothesis(db: Session, hypothesis: schemas.SnHypothesisCreate):
+    new_hypothesis = db_models.SnHypothesis(**hypothesis.dict())
+    db.add(new_hypothesis)
+    db.commit()
+    db.refresh(new_hypothesis)
+    return new_hypothesis
+
+
+async def get_tsn_hypothesises_by_tsn_id(db: Session, tsn_piece_id: str):
+    return db.query(db_models.TsnHypothesis).filter(db_models.TsnHypothesis.tsn_piece_id == tsn_piece_id).all()
+
+
+async def get_sn_hypothesises_by_tsn_id(db: Session, sn_piece_id: str):
+    return db.query(db_models.SnHypothesis).filter(db_models.SnHypothesis.sn_piece_id == sn_piece_id).all()
+
+
+async def add_tsn_hypothesis(db: Session, hypothesis: schemas.TsnHypothesisCreate):
+    new_hypothesis = db_models.TsnHypothesis(**hypothesis.dict())
+    db.add(new_hypothesis)
+    db.commit()
+    db.refresh(new_hypothesis)
+    return new_hypothesis
 
 
 async def add_sn_piece_without_spgz(db: Session, sn_piece: schemas.SnPieceCreateWithoutSpgz):  # двойная запись?
