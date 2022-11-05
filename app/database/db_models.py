@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -21,7 +21,7 @@ class TsnPiece(Base):
     code = Column(String, unique=True)  # шифр
     text = Column(String)  # наименование работ и затрат
     tsn_mapping_info = Column(String)
-    price = Column(Integer)  # всего затрат в текущем уровне, руб
+    price = Column(Float)  # всего затрат в текущем уровне, руб
     uom = Column(String)  # unit of measurement -  ед. изм.
     hypothesises = relationship("TsnHypothesis")
 
@@ -32,7 +32,7 @@ class SnPiece(Base):
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String, unique=True)  # шифр
     text = Column(String)  # наименование работ и затрат
-    price = Column(Integer)  # всего затрат в текущем уровне, руб
+    price = Column(Float)  # всего затрат в текущем уровне, руб
     uom = Column(String)  # unit of measurement -  ед. изм.
     hypothesises = relationship("SnHypothesis")
 

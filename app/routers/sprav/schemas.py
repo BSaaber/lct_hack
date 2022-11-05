@@ -1,28 +1,21 @@
 from pydantic import BaseModel
 from typing import Union, List
+from app.database.schemas import HypothesisReturn
 
 
 class TsnPieceEditIn(BaseModel):
     id: int
     code: Union[str, None] = None
     text: Union[str, None] = None
-    price: Union[str, None] = None
+    price: Union[float, None] = None
     spgz_piece_id: Union[int, None] = None
 
 
 class TsnPieceCreateIn(BaseModel):
     code: str
     text: str
-    price: int
+    price: float
     spgz_piece_id: int
-
-
-class SpgzHypothesis(BaseModel):
-    # userful info
-    name: str = "DEFAULT NAME"
-    kpgz_name: str = "DEFAULT NAME"
-
-    id: int = -1  # db id
 
 
 class SmetaLine(BaseModel):
@@ -32,8 +25,8 @@ class SmetaLine(BaseModel):
     uom: str = "DEFAULT UOM"
     amount: int = 123321
     cost_per_unit: int = 123321
-    price: int = 123321
-    hypothesises: List[SpgzHypothesis] = []
+    price: float = 123321
+    hypothesises: List[HypothesisReturn] = []
     spgz_defined: bool = False
 
     line_number: int = -1
