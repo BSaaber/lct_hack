@@ -14,7 +14,7 @@ RUN pipenv install --system --dev
 
 COPY ./app /code/app
 
-EXPOSE 8000
+EXPOSE 3030
 
 # set in docker-compose.yml
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

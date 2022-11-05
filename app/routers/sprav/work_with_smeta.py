@@ -10,6 +10,8 @@ import app.database.api as db_api
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Union
+from tempfile import NamedTemporaryFile
+from app.database import schemas as db_schemas
 
 
 class ColumnIndexes(BaseModel):
@@ -42,6 +44,8 @@ tsn_pattern = r'\d+.\d+-\d+-\d+'
 
 
 def get_smeta_standard(code):
+    if code is None or not isinstance(code, str):
+        return SmetaLineStandard.UNDEFINED
     if re.fullmatch(sn_pattern, code):
         return SmetaLineStandard.SN
     elif re.fullmatch(tsn_pattern, code):
@@ -51,58 +55,74 @@ def get_smeta_standard(code):
 
 
 def cell_not_empty(cell):
+    return (isinstance(cell, str) and cell != '') or isinstance(cell, int)
+
+
+def cell_is_not_empty_string(cell):
     return isinstance(cell, str) and cell != ''
 
 
+def cell_is_not_empty_num(cell):
+    return isinstance(cell, int) or isinstance(cell, float)
+
+
 def cell_is_empty(cell):
-    return not isinstance(cell, str) or cell == ''
+    return cell is None or cell == '' or (
+                not isinstance(cell, str) and not isinstance(cell, int) and not isinstance(cell, float))
 
 
 # TODO что делать с хуетой по типу Source!=F28
 
-async def parse_smeta(db: Session, file: bytes):
-
-
-
+def mock():
     result = schemas.Smeta()
     smeta_category = schemas.SmetaCategory()
     smeta_line = schemas.SmetaLine()
-    smeta_hypothesis = schemas.SpgzHypothesis()
-    for i in range(5):
-        smeta_line.hypothesises.append(smeta_hypothesis)
-    for i in range(15):
-        smeta_category.lines.append(smeta_line)
-    for i in range(3):
-        result.categories.append(smeta_category)
-    return result
+    # smeta_hypothesis = schemas.SpgzHypothesis()  # TODO
+    # for i in range(5):
+    #    smeta_line.hypothesises.append(smeta_hypothesis)
+    # for i in range(15):
+    #    smeta_category.lines.append(smeta_line)
+    # for i in range(3):
+    #    result.categories.append(smeta_category)
+    # return result
 
 
+async def patch_smeta(db: Session, path: str, patches: schemas.PatchSmetaIn):
+    workbook = load_workbook(path, data_only=True)  # .read()?
+    worksheet = workbook.active
+    # resp = await db_api.sprav_edit.get_spgz_pieces_by_id_list([patch.spgz_id for patch in patches.patches])
+    for patch in patches.patches:
+        spgz_piece = await db_api.sprav_edit.get_spgz_piece_by_id(db, patch.spgz_id)
+        spgz_piece_return = db_schemas.SpgzPieceReturn.from_orm(spgz_piece)
+        worksheet.cell(row=patch.line_number, column=40, value=spgz_piece_return.name)
+        worksheet.cell(row=patch.line_number, column=41, value=spgz_piece_return.kpgz_piece.name)
+        print("patch: ", patch)
+    workbook.save(path)
+    print("saved")
 
 
+async def parse_smeta(db: Session, file: bytes):
+    # return mock()
 
-
-
-
-    workbook = load_workbook(BytesIO(file), read_only=True)  # .read()?
+    workbook = load_workbook(BytesIO(file), data_only=True)  # .read()?
     worksheet = workbook.active
     result = schemas.Smeta()
     mode = ParseMode.FINDING_ADDRESS
     column_indexes = ColumnIndexes()
+    lines_with_bad_code_format = []
     for line_index, row in enumerate(worksheet.iter_rows(values_only=True)):
         if mode is ParseMode.FINDING_ADDRESS:
             mode = ParseMode.FINDING_COLUMNS_INDEXES
         elif mode is ParseMode.FINDING_COLUMNS_INDEXES:
-            print(line_index, "| ", row)
+            print(line_index + 1, "| ", row)
             for j, val in enumerate(row):
-                if line_index == 26:
-                    print(f"val {j}: {val}")
-                if cell_not_empty(val) and line_index == 26:
+                if cell_is_not_empty_string(val):
                     print("val is not empty")
                     if 'шифр' in val.lower():
                         column_indexes.code = j
                     elif "наименование" in val.lower():
                         column_indexes.name = j
-                    elif "ед. изм." in val.lower() or "измерен" in val.lower():
+                    elif "ед. изм." == val.lower() or "единица измерения" == val.lower():
                         column_indexes.uom = j
                     elif "кол-во" in val.lower() or "количество" in val.lower():
                         column_indexes.amount = j
@@ -115,17 +135,16 @@ async def parse_smeta(db: Session, file: bytes):
                 mode = ParseMode.PARSING_LINES
                 print("MODE CHANGED TO PARSING LINES")
                 print("------------------------------")
-            # not_found = ', '.join([k for k, v in column_indexes._asdict().items() if v is None])
-            # if not_found != '':
-            # raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-            #                    detail=f"error: columns {not_found} are not found")
         elif mode is ParseMode.PARSING_LINES:
-            if cell_not_empty(row[0]) and 'раздел' in row[0].lower():  # new category
+            if cell_is_not_empty_string(row[0]) and 'раздел' in row[0].lower() and 'итого' not in row[
+                0].lower():  # new category
                 print("STARTING NEW CATEGORY")
                 result.categories.append(schemas.SmetaCategory())
                 continue
-            elif cell_not_empty(row[column_indexes.code]) and cell_is_empty(row[column_indexes.price]):  # new line
-                print("NEW LINE")
+            elif cell_is_not_empty_string(row[column_indexes.code]) and get_smeta_standard(
+                    row[column_indexes.code] != SmetaLineStandard.UNDEFINED):  # new line
+                print("NEW LINE | ", line_index + 1, " | code:", row[column_indexes.code], " | price: ",
+                      row[column_indexes.price])
                 result.categories[-1].lines.append(schemas.SmetaLine())
                 result.categories[-1].lines[-1].code = row[column_indexes.code]
                 result.categories[-1].lines[-1].name = row[column_indexes.name]
@@ -133,17 +152,29 @@ async def parse_smeta(db: Session, file: bytes):
                 result.categories[-1].lines[-1].amount = row[column_indexes.amount]
                 result.categories[-1].lines[-1].code = row[column_indexes.code]
                 result.categories[-1].lines[-1].line_number = line_index + 1
-            elif cell_is_empty(row[column_indexes.code]) and cell_not_empty(row[column_indexes.price]):  # price
-                print("NEW LINE PRICE")
-                result.categories[-1].lines[-1].price = row[column_indexes.price]
+                # elif cell_is_empty(row[column_indexes.name]) and (
+                #        cell_is_not_empty_num(row[column_indexes.price]) or cell_is_not_empty_num(
+                #        row[column_indexes.price - 1])):  # price
+                #    print("NEW LINE PRICE")
+                #    if cell_is_not_empty_num(row[column_indexes.price]):
+                #        result.categories[-1].lines[-1].price = row[column_indexes.price]
+                #    else:
+                #        result.categories[-1].lines[-1].price = row[column_indexes.price - 1]
+
+                ############################################
+                result.categories[-1].lines[-1].price = -321
+                ############################################
 
                 standard = get_smeta_standard(result.categories[-1].lines[-1].code)
+                print("stadard: ", standard.name)
+                print("line: ", result.categories[-1].lines[-1])
                 if standard == SmetaLineStandard.SN:
-                    sn_piece = await db_api.sprav_edit.get_tsn_piece_by_code(db, result.categories[-1].lines[-1].code)
+                    sn_piece = await db_api.sprav_edit.get_sn_piece_by_code(db, result.categories[-1].lines[-1].code)
                     if sn_piece is None:
                         raise HTTPException(status_code=status.HTTP_500_BAD_REQUEST,
                                             detail=f"error: no data for code in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
-                    hypothesises = await db_api.sprav_edit.get_sn_hypothesises_by_tsn_id(db, sn_piece.id)
+                    print("sn piece: ", sn_piece)
+                    hypothesises = await db_api.sprav_edit.get_sn_hypothesises_by_sn_id(db, sn_piece.id)
                     if hypothesises is None:
                         raise HTTPException(status_code=status.HTTP_500_BAD_REQUEST,
                                             detail=f"error: no hypothesises for code in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
@@ -151,9 +182,15 @@ async def parse_smeta(db: Session, file: bytes):
                 elif standard == SmetaLineStandard.TSN:
                     pass
                 elif standard == SmetaLineStandard.UNDEFINED:
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                        detail=f"bad code format in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
+                    lines_with_bad_code_format.append(line_index + 1)
+                    # raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                    #                    detail=f"bad code format in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
             else:  # case trash
-                pass
+                print("TRASH | ", line_index + 1)
+                # print("price: ", row[column_indexes.price], " | price - 1: ", row[column_indexes.price - 1],
+                #      " | name: ", row[column_indexes.name])
+                # print("first: ", cell_is_empty(row[column_indexes.name]))
+                # print("second: ", cell_is_not_empty_num(row[column_indexes.price]))
+                # print("third: ", cell_is_not_empty_num(row[column_indexes.price - 1]))
 
     return result

@@ -101,7 +101,7 @@ async def get_tsn_hypothesises_by_tsn_id(db: Session, tsn_piece_id: str):
     return db.query(db_models.TsnHypothesis).filter(db_models.TsnHypothesis.tsn_piece_id == tsn_piece_id).all()
 
 
-async def get_sn_hypothesises_by_tsn_id(db: Session, sn_piece_id: str):
+async def get_sn_hypothesises_by_sn_id(db: Session, sn_piece_id: str):
     return db.query(db_models.SnHypothesis).filter(db_models.SnHypothesis.sn_piece_id == sn_piece_id).all()
 
 
@@ -135,6 +135,10 @@ async def get_spgz_piece_by_id(db: Session, id: int):
 
 async def get_spgz_piece_by_data_id(db: Session, data_id: int):
     return db.query(db_models.SpgzPiece).filter(db_models.SpgzPiece.data_id == data_id).first()
+
+
+#async def get_spgz_pieces_by_id_list(db: Session, id_list):
+#    return db.query(db_models.SpgzPiece).filter(db_models.SpgzPiece.id.in_(id_list)).all()
 
 
 async def get_kpgz_piece_by_id(db: Session, id: int):

@@ -37,7 +37,7 @@ class TsnPieceBase(BaseModel):
     code: str
     text: str
     tsn_mapping_info: str
-    price: int
+    price: float
     uom: str
 
 
@@ -45,7 +45,7 @@ class TsnPieceCreateWithoutSpgz(BaseModel):
     code: str
     text: str
     tsn_mapping_info: str
-    price: int
+    price: float
     uom: str
 
 
@@ -61,21 +61,21 @@ class TsnPieceEdit(BaseModel):
     code: Union[str, None] = None
     tsn_mapping_info: Union[str, None] = None
     text: Union[str, None] = None
-    price: Union[str, None] = None
+    price: Union[float, None] = None
     spgz_piece_id: Union[int, None] = None
 
 
 class SnPieceBase(BaseModel):
     code: str
     text: str
-    price: int
+    price: float
     uom: str
 
 
 class SnPieceCreateWithoutSpgz(BaseModel):
     code: str
     text: str
-    price: int
+    price: float
     uom: str
 
 
@@ -90,7 +90,7 @@ class SnPieceEdit(BaseModel):
     id: int
     code: Union[str, None] = None
     text: Union[str, None] = None
-    price: Union[str, None] = None
+    price: Union[float, None] = None
     spgz_piece_id: Union[int, None] = None
 
 
@@ -136,8 +136,11 @@ class TsnHypothesisCreate(Hypothesis):
     spgz_piece_id: int
 
 
-class TsnHypothesisReturn(Hypothesis):
+class HypothesisReturn(Hypothesis):
     spgz_piece: SpgzPieceReturn
+
+    class Config:
+        orm_mode = True
 
 
 class SnHypothesisCreate(Hypothesis):
@@ -145,5 +148,8 @@ class SnHypothesisCreate(Hypothesis):
     spgz_piece_id: int
 
 
-class SnHypothesisReturn(Hypothesis):
+class HypothesisReturn(Hypothesis):
     spgz_piece: SpgzPieceReturn
+
+    class Config:
+        orm_mode = True

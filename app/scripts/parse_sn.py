@@ -22,7 +22,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 async def parse_sn(filename: str):
     print("parse_sn started to work")
     with SessionLocal() as db:
-        workbook = load_workbook(filename, read_only=True)
+        workbook = load_workbook(filename, data_only=True)
         worksheet = workbook.active
         errors = 0
         code = None
