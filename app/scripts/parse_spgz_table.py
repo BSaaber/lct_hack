@@ -50,7 +50,6 @@ async def parse_spgz_kpgz(filename: str):
                 if kpgz_result is None:
                     errors += 1
                     print("error during writing kpgz to db")
-                    print(row)
                     continue
 
             # form spgz_piece
