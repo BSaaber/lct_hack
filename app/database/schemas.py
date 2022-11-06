@@ -155,5 +155,8 @@ class HypothesisReturn(BaseModel):
     usage_counter: int = 0
     spgz_piece: SpgzPieceReturn
 
+    def __lt__(self, other):
+        return self.priority < other.priority
+
     class Config:
         orm_mode = True
