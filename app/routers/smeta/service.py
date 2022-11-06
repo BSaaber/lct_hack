@@ -44,7 +44,8 @@ async def patch_smeta(user_id: int, patches: PatchSmetaIn, db: Session = Depends
     filename = str(user_id) + ".xlsx"
     if not patch_mock:
         await work_with_smeta.patch_smeta(db, path, patches)
-    headers = {f'Content-Disposition': f'attachment; filename="{filename}"'}
+    headers = {f'Content-Disposition': f'attachment; filename="{filename}"',
+               'Access-Control-Expose-Headers': 'Content-Disposition'}
     return FileResponse(path=path, headers=headers)
 
 
