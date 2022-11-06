@@ -17,6 +17,10 @@ python-dotenv = "*"
 openpyxl = "*"
 nltk = "*"
 pymorphy2 = "*"
+transformers = "*"
+torch = "*"
+scikit-learn = "*"
+numpy = "*"
 
 [dev-packages]
 

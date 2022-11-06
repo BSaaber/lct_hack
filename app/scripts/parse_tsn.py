@@ -102,7 +102,6 @@ async def parse_tsn(filename: str):
             # print("----------------")
             # form tsn_piece
             tsn_mapping_info = ','.join(text_handler.process_text(text))
-            print(tsn_mapping_info)
             tsn_piece = db_schemas.TsnPieceCreateWithoutSpgz(code=code, text=text, tsn_mapping_info=tsn_mapping_info,
                                                              uom=uom, price=price)
             tsn_result = await db_api.sprav_edit.get_tsn_piece_by_code(db, code)
