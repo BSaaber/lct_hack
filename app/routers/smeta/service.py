@@ -34,12 +34,16 @@ async def parse_smeta(user_id: int, db: Session = Depends(get_db), file: bytes =
     return result
 
 
+patch_mock = False
+
+
 # TODO хранить имя файла и возвращать с нормальным именем
 @router.post("/patch_smeta/{user_id}", response_class=FileResponse)
 async def patch_smeta(user_id: int, patches: PatchSmetaIn, db: Session = Depends(get_db)):
     path = make_file_path(user_id)
     filename = str(user_id) + ".xlsx"
-    await work_with_smeta.patch_smeta(db, path, patches)
+    if not patch_mock:
+        await work_with_smeta.patch_smeta(db, path, patches)
     headers = {f'Content-Disposition': f'attachment; filename="{filename}"'}
     return FileResponse(path=path, headers=headers)
 
