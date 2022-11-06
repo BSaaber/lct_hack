@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -24,6 +24,7 @@ class TsnPiece(Base):
     price = Column(Float)  # всего затрат в текущем уровне, руб
     uom = Column(String)  # unit of measurement -  ед. изм.
     hypothesises = relationship("TsnHypothesis")
+    spgz_defined = Column(Boolean)
 
 
 class SnPiece(Base):
@@ -35,6 +36,7 @@ class SnPiece(Base):
     price = Column(Float)  # всего затрат в текущем уровне, руб
     uom = Column(String)  # unit of measurement -  ед. изм.
     hypothesises = relationship("SnHypothesis")
+    spgz_defined = Column(Boolean)
 
 
 class TsnHypothesis(Base):
@@ -45,6 +47,7 @@ class TsnHypothesis(Base):
     spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
     spgz_piece = relationship("SpgzPiece")
     usage_counter = Column(Integer)
+    probability = Column(Integer)
 
 
 class SnHypothesis(Base):
@@ -55,6 +58,7 @@ class SnHypothesis(Base):
     spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
     spgz_piece = relationship("SpgzPiece")
     usage_counter = Column(Integer)
+    probability = Column(Integer)
 
 
 class SpgzPiece(Base):
