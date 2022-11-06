@@ -35,6 +35,10 @@ async def get_all_tsn(db: Session):
     return db.query(db_models.TsnPiece).all()
 
 
+async def get_all_spgz(db: Session):
+    return db.query(db_models.SpgzPiece).all()
+
+
 async def get_all_sn(db: Session):
     return db.query(db_models.SnPiece).all()
 
