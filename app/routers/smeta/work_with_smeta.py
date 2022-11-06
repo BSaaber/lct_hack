@@ -72,8 +72,9 @@ def mock():
     smeta_hypothesis = db_schemas.HypothesisReturn(spgz_piece=spgz_piece, priority=-1, usage_counter=0)
     for i in range(5):
         smeta_hypothesis.priority = i
-        smeta_hypothesis.spgz_piece.id = i
-        smeta_hypothesis.spgz_piece.name = f"name {i}"
+        spgz_piece.id = i
+        spgz_piece.name = f"name {i}"
+        smeta_hypothesis.spgz_piece = spgz_piece.copy()
         print("hypo now:")
         print(smeta_hypothesis)
         smeta_line.hypothesises.append(smeta_hypothesis.copy())
