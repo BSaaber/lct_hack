@@ -33,6 +33,7 @@ class SnPiece(Base):
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String, unique=True)  # шифр
     text = Column(String)  # наименование работ и затрат
+    sn_mapping_info = Column(String)
     price = Column(Float)  # всего затрат в текущем уровне, руб
     uom = Column(String)  # unit of measurement -  ед. изм.
     hypothesises = relationship("SnHypothesis")
@@ -47,7 +48,7 @@ class TsnHypothesis(Base):
     spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
     spgz_piece = relationship("SpgzPiece")
     usage_counter = Column(Integer)
-    probability = Column(Integer)
+    probability = Column(Float)
 
 
 class SnHypothesis(Base):
@@ -58,7 +59,7 @@ class SnHypothesis(Base):
     spgz_piece_id = Column(Integer, ForeignKey("spgz.id"))
     spgz_piece = relationship("SpgzPiece")
     usage_counter = Column(Integer)
-    probability = Column(Integer)
+    probability = Column(Float)
 
 
 class SpgzPiece(Base):

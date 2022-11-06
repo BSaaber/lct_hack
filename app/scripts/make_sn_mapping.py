@@ -28,10 +28,10 @@ def count_recall(tp, fn):
     return recall
 
 
-def count_f_score_between_tsn_and_spgz(tsn_info, spgz_info):
-    tp = len(tsn_info.intersection(spgz_info))
-    fp = len(tsn_info.difference(spgz_info))
-    fn = len(spgz_info.difference(tsn_info))
+def count_f_score_between_sn_and_spgz(sn_info, spgz_info):
+    tp = len(sn_info.intersection(spgz_info))
+    fp = len(sn_info.difference(spgz_info))
+    fn = len(spgz_info.difference(sn_info))
 
     precision = count_precision(tp, fp)
     recall = count_recall(tp, fn)
@@ -42,8 +42,8 @@ def count_f_score_between_tsn_and_spgz(tsn_info, spgz_info):
     return precision
 
 
-def jaccard_metric_between_tsn_and_spgz(tsn_info, spgz_info):
-    return len(tsn_info.intersection(spgz_info)) / len(tsn_info.union(spgz_info))
+def jaccard_metric_between_tsn_and_spgz(sn_info, spgz_info):
+    return len(sn_info.intersection(spgz_info)) / len(sn_info.union(spgz_info))
 
 
 # python -m app.scripts.make_tsn_mapping
@@ -52,23 +52,23 @@ def jaccard_metric_between_tsn_and_spgz(tsn_info, spgz_info):
 async def make_tsn_mapping():
     print("make_hypothesises started to work")
     with SessionLocal() as db:
-        for new_tsn in (await db_api.sprav_edit.get_all_tsn(db)):
-            tsn_info = {word for word in new_tsn.tsn_mapping_info.split(',')}
+        for new_sn in (await db_api.sprav_edit.get_all_sn(db)):
+            sn_info = {word for word in new_sn.sn_mapping_info.split(',')}
             best_spgzs = []
             for new_spgz in (await db_api.sprav_edit.get_all_spgz(db)):
                 spgz_info = {word for word in new_spgz.mapping_info.split(',')}
-                score = count_f_score_between_tsn_and_spgz(tsn_info, spgz_info)
+                score = count_f_score_between_sn_and_spgz(sn_info, spgz_info)
                 heappush(best_spgzs, (score, new_spgz.id))
                 if len(best_spgzs) > 5:
                     heappop(best_spgzs)
 
             for i, (spgz_prob, spgz_id) in enumerate(best_spgzs):
-                tsn_hypothesis = db_schemas.TsnHypothesisCreate(priority=i,
+                tsn_hypothesis = db_schemas.SnHypothesisCreate( priority=i,
                                                                 spgz_piece_id=spgz_id,
                                                                 probability=spgz_prob * 100,
                                                                 usage_counter=0,
-                                                                tsn_piece_id=new_tsn.id)
-                tsn_result = await db_api.sprav_edit.add_tsn_hypothesis(db, tsn_hypothesis)
+                                                                sn_piece_id=new_sn.id)
+                tsn_result = await db_api.sprav_edit.add_sn_hypothesis(db, tsn_hypothesis)
 
         # for curr_tsn in (await db_api.sprav_edit.get_all_tsn(db)):
         #     p_queue = []
