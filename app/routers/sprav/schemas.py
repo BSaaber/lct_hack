@@ -24,7 +24,6 @@ class SmetaLine(BaseModel):
     name: str = "DEFAULT NAME"
     uom: str = "DEFAULT UOM"
     amount: int = 123321
-    cost_per_unit: int = 123321
     price: float = 123321
     hypothesises: List[HypothesisReturn] = []
     spgz_defined: bool = False

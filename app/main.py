@@ -6,11 +6,27 @@ from fastapi_sqlalchemy import DBSessionMiddleware
 from fastapi_sqlalchemy import db
 from dotenv import load_dotenv
 from app.database import db_models # noqa - for db initialization
+from fastapi.middleware.cors import CORSMiddleware
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 app = FastAPI()
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(DBSessionMiddleware, db_url=os.environ["DATABASE_URL"])
 

@@ -3,14 +3,12 @@ import re
 from openpyxl import load_workbook
 from io import BytesIO
 from enum import Enum
-from . import schemas
+from app.routers.sprav import schemas
 from fastapi import HTTPException, status
-from collections import namedtuple
 import app.database.api as db_api
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Union
-from tempfile import NamedTemporaryFile
 from app.database import schemas as db_schemas
 
 
@@ -34,13 +32,11 @@ class SmetaLineStandard(Enum):
     UNDEFINED = 3
 
 
-sn_pattern = r'\d+\.\d+-\d+-\d+-\d+/\d+'
 #              5   .4  -320-7  -1  /1     | 5.4-320-7-1/1
-
-tsn_pattern = r'\d+.\d+-\d+-\d+'
-
+sn_pattern = r'\d+\.\d+-\d+-\d+-\d+/\d+'
 
 #               3  .51 -2  -1             | 3.51-2-1
+tsn_pattern = r'\d+.\d+-\d+-\d+'
 
 
 def get_smeta_standard(code):
@@ -54,10 +50,6 @@ def get_smeta_standard(code):
         return SmetaLineStandard.UNDEFINED
 
 
-def cell_not_empty(cell):
-    return (isinstance(cell, str) and cell != '') or isinstance(cell, int)
-
-
 def cell_is_not_empty_string(cell):
     return isinstance(cell, str) and cell != ''
 
@@ -68,29 +60,29 @@ def cell_is_not_empty_num(cell):
 
 def cell_is_empty(cell):
     return cell is None or cell == '' or (
-                not isinstance(cell, str) and not isinstance(cell, int) and not isinstance(cell, float))
+            not isinstance(cell, str) and not isinstance(cell, int) and not isinstance(cell, float))
 
-
-# TODO что делать с хуетой по типу Source!=F28
 
 def mock():
     result = schemas.Smeta()
     smeta_category = schemas.SmetaCategory()
     smeta_line = schemas.SmetaLine()
-    # smeta_hypothesis = schemas.SpgzHypothesis()  # TODO
-    # for i in range(5):
-    #    smeta_line.hypothesises.append(smeta_hypothesis)
-    # for i in range(15):
-    #    smeta_category.lines.append(smeta_line)
-    # for i in range(3):
-    #    result.categories.append(smeta_category)
-    # return result
+    kpgz_piece = db_schemas.KpgzPieceReturn(name="KPGZ PIECE NAME", id=123321)
+    spgz_piece = db_schemas.SpgzPieceReturn(name="SPGZ PIECE NAME", id=123321, kpgz_piece=kpgz_piece)
+    smeta_hypothesis = db_schemas.HypothesisReturn(spgz_piece=spgz_piece, priority=-1, usage_counter=0)
+    for i in range(1, 6):
+        smeta_hypothesis.priority = i
+        smeta_line.hypothesises.append(smeta_hypothesis)
+    for i in range(15):
+        smeta_category.lines.append(smeta_line)
+    for i in range(3):
+        result.categories.append(smeta_category)
+    return result
 
 
 async def patch_smeta(db: Session, path: str, patches: schemas.PatchSmetaIn):
-    workbook = load_workbook(path, data_only=True)  # .read()?
+    workbook = load_workbook(path, data_only=True)
     worksheet = workbook.active
-    # resp = await db_api.sprav_edit.get_spgz_pieces_by_id_list([patch.spgz_id for patch in patches.patches])
     for patch in patches.patches:
         spgz_piece = await db_api.sprav_edit.get_spgz_piece_by_id(db, patch.spgz_id)
         spgz_piece_return = db_schemas.SpgzPieceReturn.from_orm(spgz_piece)
@@ -110,6 +102,8 @@ async def parse_smeta(db: Session, file: bytes):
     mode = ParseMode.FINDING_ADDRESS
     column_indexes = ColumnIndexes()
     lines_with_bad_code_format = []
+    a = 0
+    b = 0
     for line_index, row in enumerate(worksheet.iter_rows(values_only=True)):
         if mode is ParseMode.FINDING_ADDRESS:
             mode = ParseMode.FINDING_COLUMNS_INDEXES
@@ -136,10 +130,14 @@ async def parse_smeta(db: Session, file: bytes):
                 print("MODE CHANGED TO PARSING LINES")
                 print("------------------------------")
         elif mode is ParseMode.PARSING_LINES:
-            if cell_is_not_empty_string(row[0]) and 'раздел' in row[0].lower() and 'итого' not in row[
-                0].lower():  # new category
+            # new category
+            if cell_is_not_empty_string(row[0]) and 'раздел' in row[0].lower() and 'итого' not in row[0].lower():
                 print("STARTING NEW CATEGORY")
-                result.categories.append(schemas.SmetaCategory())
+                name = row[0].lower()
+                name = name[name.find('раздел') + len('раздел'):]
+                if len(name) != 0 and name[0] == ':':
+                    name = name[1:]
+                result.categories.append(schemas.SmetaCategory(name=name))
                 continue
             elif cell_is_not_empty_string(row[column_indexes.code]) and get_smeta_standard(
                     row[column_indexes.code] != SmetaLineStandard.UNDEFINED):  # new line
@@ -152,6 +150,9 @@ async def parse_smeta(db: Session, file: bytes):
                 result.categories[-1].lines[-1].amount = row[column_indexes.amount]
                 result.categories[-1].lines[-1].code = row[column_indexes.code]
                 result.categories[-1].lines[-1].line_number = line_index + 1
+
+                # find price | problem - sometimes lines are united and have only sum price
+
                 # elif cell_is_empty(row[column_indexes.name]) and (
                 #        cell_is_not_empty_num(row[column_indexes.price]) or cell_is_not_empty_num(
                 #        row[column_indexes.price - 1])):  # price
@@ -171,26 +172,37 @@ async def parse_smeta(db: Session, file: bytes):
                 if standard == SmetaLineStandard.SN:
                     sn_piece = await db_api.sprav_edit.get_sn_piece_by_code(db, result.categories[-1].lines[-1].code)
                     if sn_piece is None:
-                        raise HTTPException(status_code=status.HTTP_500_BAD_REQUEST,
-                                            detail=f"error: no data for code in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
+                        lines_with_bad_code_format.append(line_index + 1)
+                        result.categories[-1].lines.pop()
+                        continue
                     print("sn piece: ", sn_piece)
                     hypothesises = await db_api.sprav_edit.get_sn_hypothesises_by_sn_id(db, sn_piece.id)
                     if hypothesises is None:
                         raise HTTPException(status_code=status.HTTP_500_BAD_REQUEST,
-                                            detail=f"error: no hypothesises for code in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
+                                            detail=f"error: no hypothesises for sn code in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
                     result.categories[-1].lines[-1].hypothesises = hypothesises
                 elif standard == SmetaLineStandard.TSN:
-                    pass
+                    print("here")
+                    tsn_piece = await db_api.sprav_edit.get_tsn_piece_by_code(db, result.categories[-1].lines[-1].code)
+                    if tsn_piece is None:
+                        lines_with_bad_code_format.append(line_index + 1)
+                        result.categories[-1].lines.pop()
+                        a += 1
+                        continue
+                    print("tsn piece: ", tsn_piece)
+                    hypothesises = await db_api.sprav_edit.get_tsn_hypothesises_by_tsn_id(db, tsn_piece.id)
+                    if hypothesises is None:
+                        raise HTTPException(status_code=status.HTTP_500_BAD_REQUEST,
+                                            detail=f"error: no hypothesises for tsn code in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
+                    result.categories[-1].lines[-1].hypothesises = hypothesises
+                    b += 1
                 elif standard == SmetaLineStandard.UNDEFINED:
                     lines_with_bad_code_format.append(line_index + 1)
-                    # raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    #                    detail=f"bad code format in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
-            else:  # case trash
+            # unimportant line
+            else:
                 print("TRASH | ", line_index + 1)
-                # print("price: ", row[column_indexes.price], " | price - 1: ", row[column_indexes.price - 1],
-                #      " | name: ", row[column_indexes.name])
-                # print("first: ", cell_is_empty(row[column_indexes.name]))
-                # print("second: ", cell_is_not_empty_num(row[column_indexes.price]))
-                # print("third: ", cell_is_not_empty_num(row[column_indexes.price - 1]))
 
+    print(f"\n\n\nTOTAL ERRORS: {len(lines_with_bad_code_format)}\n\n\n")
+    print("a", a)
+    print("b", b)
     return result
