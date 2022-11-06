@@ -76,6 +76,7 @@ def mock():
         print(smeta_hypothesis)
         smeta_line.hypothesises.append(smeta_hypothesis.copy())
     for i in range(15):
+        smeta_line.hypothesises.sort(reverse=True)
         smeta_category.lines.append(smeta_line)
     for i in range(3):
         result.categories.append(smeta_category)
@@ -197,6 +198,7 @@ async def parse_smeta(db: Session, file: bytes):
                         raise HTTPException(status_code=status.HTTP_500_BAD_REQUEST,
                                             detail=f"error: no hypothesises for tsn code in line {line_index}: {result.categories[-1].lines[-1].code}\ncurrent building line: {result.categories[-1].lines[-1]}")
                     result.categories[-1].lines[-1].hypothesises = hypothesises
+                    result.categories[-1].lines[-1].hypothesises.sort(reverse=True)
                     b += 1
                 elif standard == SmetaLineStandard.UNDEFINED:
                     lines_with_bad_code_format.append(line_index + 1)
