@@ -13,7 +13,7 @@ class SmetaLine(BaseModel):
     hypothesises: List[HypothesisReturn] = []
     spgz_defined: bool = False
 
-    line_number: int = -1
+    line_number: int = 11
 
 
 class SmetaCategory(BaseModel):
