@@ -3,7 +3,7 @@ import re
 from openpyxl import load_workbook
 from io import BytesIO
 from enum import Enum
-from app.routers.sprav import schemas
+from app.routers.smeta import schemas
 from fastapi import HTTPException, status
 import app.database.api as db_api
 from sqlalchemy.orm import Session

@@ -27,6 +27,14 @@ async def get_sn(db: Session, offset: int = 0, limit: int = 100):
     return db.query(db_models.SnPiece).offset(offset).limit(limit).all()
 
 
+async def get_spgz(db: Session, offset: int = 0, limit: int = 100):
+    return db.query(db_models.SpgzPiece).offset(offset).limit(limit).all()
+
+
+async def get_kpgz(db: Session, offset: int = 0, limit: int = 100):
+    return db.query(db_models.KpgzPiece).offset(offset).limit(limit).all()
+
+
 async def count_sn_pieces(db: Session):
     return db.query(db_models.SnPiece).count()
 
@@ -133,7 +141,7 @@ async def get_spgz_piece_by_data_id(db: Session, data_id: int):
     return db.query(db_models.SpgzPiece).filter(db_models.SpgzPiece.data_id == data_id).first()
 
 
-#async def get_spgz_pieces_by_id_list(db: Session, id_list):
+# async def get_spgz_pieces_by_id_list(db: Session, id_list):
 #    return db.query(db_models.SpgzPiece).filter(db_models.SpgzPiece.id.in_(id_list)).all()
 
 
