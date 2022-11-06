@@ -2,6 +2,7 @@ from openpyxl import load_workbook
 from sqlalchemy import create_engine
 from app.database import db_models  # noqa - for db initialization
 from app.database import schemas as db_schemas
+from app.scripts.morphem_handler import TextHandler
 import app.database.api as db_api
 import os
 from dotenv import load_dotenv
@@ -22,6 +23,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 async def parse_sn(filename: str):
     print("parse_sn started to work")
     with SessionLocal() as db:
+        text_handler = TextHandler()
         workbook = load_workbook(filename, data_only=True)
         worksheet = workbook.active
         errors = 0
@@ -107,8 +109,9 @@ async def parse_sn(filename: str):
             # price = None
             # print("----------------")
             # form sn_piece
-
-            sn_piece = db_schemas.SnPieceCreateWithoutSpgz(code=code, text=text, uom=uom, price=price)
+            sn_mapping_info = ','.join(text_handler.process_text(text))
+            sn_piece = db_schemas.SnPieceCreateWithoutSpgz(code=code, text=text, sn_mapping_info=sn_mapping_info,
+                                                           uom=uom, price=price, spgz_defined=False)
             sn_result = await db_api.sprav_edit.get_sn_piece_by_code(db, code)
             if sn_result is None:
                 # write sn_piece to db

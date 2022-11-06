@@ -36,7 +36,6 @@ class UserReturn(UserBase):
 class TsnPieceBase(BaseModel):
     code: str
     text: str
-    tsn_mapping_info: str
     price: float
     uom: str
 
@@ -44,6 +43,7 @@ class TsnPieceBase(BaseModel):
 class TsnPieceCreateWithoutSpgz(BaseModel):
     code: str
     text: str
+    spgz_defined: bool
     tsn_mapping_info: str
     price: float
     uom: str
@@ -59,7 +59,6 @@ class TsnPieceReturn(TsnPieceBase):
 class TsnPieceEdit(BaseModel):
     id: int
     code: Union[str, None] = None
-    tsn_mapping_info: Union[str, None] = None
     text: Union[str, None] = None
     price: Union[float, None] = None
     spgz_piece_id: Union[int, None] = None
@@ -75,6 +74,8 @@ class SnPieceBase(BaseModel):
 class SnPieceCreateWithoutSpgz(BaseModel):
     code: str
     text: str
+    sn_mapping_info: str
+    spgz_defined: bool
     price: float
     uom: str
 
@@ -128,6 +129,7 @@ class KpgzPieceCreate(BaseModel):
 
 class Hypothesis(BaseModel):
     priority: int
+    probability: float
     usage_counter: int = 0
 
 
