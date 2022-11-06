@@ -70,9 +70,11 @@ def mock():
     kpgz_piece = db_schemas.KpgzPieceReturn(name="KPGZ PIECE NAME", id=123321)
     spgz_piece = db_schemas.SpgzPieceReturn(name="SPGZ PIECE NAME", id=123321, kpgz_piece=kpgz_piece)
     smeta_hypothesis = db_schemas.HypothesisReturn(spgz_piece=spgz_piece, priority=-1, usage_counter=0)
-    for i in range(1, 6):
+    for i in range(5):
         smeta_hypothesis.priority = i
-        smeta_line.hypothesises.append(smeta_hypothesis)
+        print("hypo now:")
+        print(smeta_hypothesis)
+        smeta_line.hypothesises.append(smeta_hypothesis.copy())
     for i in range(15):
         smeta_category.lines.append(smeta_line)
     for i in range(3):

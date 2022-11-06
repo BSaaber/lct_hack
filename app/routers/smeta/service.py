@@ -31,9 +31,6 @@ async def parse_smeta(user_id: int, db: Session = Depends(get_db), file: bytes =
     with open(path, "wb") as save_file:
         save_file.write(file)
     print("returning result")
-    print("\n\n\n")
-    print(result)
-    print("\n\n\n")
     return result
 
 
@@ -44,8 +41,7 @@ async def patch_smeta(user_id: int, patches: PatchSmetaIn, db: Session = Depends
     filename = str(user_id) + ".xlsx"
     await work_with_smeta.patch_smeta(db, path, patches)
     headers = {f'Content-Disposition': f'attachment; filename="{filename}"'}
-    return FileResponse(path=path, headers=headers)  # media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    # return FileResponse(BytesIO(file))
+    return FileResponse(path=path, headers=headers)
 
 
 @router.get("/")

@@ -150,7 +150,9 @@ class SnHypothesisCreate(Hypothesis):
     spgz_piece_id: int
 
 
-class HypothesisReturn(Hypothesis):
+class HypothesisReturn(BaseModel):
+    priority: int
+    usage_counter: int = 0
     spgz_piece: SpgzPieceReturn
 
     class Config:
